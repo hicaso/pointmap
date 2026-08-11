@@ -1,4 +1,7 @@
-// --- State Management ---
+// --- Default Map Location: 경복궁 ---
+const DEFAULT_CENTER = [37.5796, 126.9770];
+const DEFAULT_ZOOM = 15;
+
 let currentMode = 'travel'; // 'travel', 'business', 'custom', 'memo'
 let itineraries = [];
 let currentItineraryId = null;
@@ -184,7 +187,7 @@ function initMap() {
         preferCanvas: false,
         worldCopyJump: true,
         minZoom: 3
-    }).setView([37.5665, 126.9780], 13);
+    }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -343,55 +346,20 @@ function getModeName(mode) {
 }
 
 function getSeedDataForMode(mode) {
-    switch (mode) {
-        case 'travel':
-            return [
-                {
-                    id: 'itinerary-travel-default',
-                    name: '제주도 2박 3일 여행',
-                    places: [
-                        { id: 'place-jeju-1', name: '제주국제공항', lat: 33.5113, lng: 126.4930 },
-                        { id: 'place-jeju-2', name: '함덕해수욕장', lat: 33.5434, lng: 126.6692 },
-                        { id: 'place-jeju-3', name: '성산일출봉', lat: 33.4585, lng: 126.9425 }
-                    ]
-                }
-            ];
-        case 'business':
-            return [
-                {
-                    id: 'itinerary-business-default',
-                    name: '서울 비즈니스 출장',
-                    places: [
-                        { id: 'place-seoul-1', name: '코엑스 (COEX)', lat: 37.5118, lng: 127.0592 },
-                        { id: 'place-seoul-2', name: '강남 파이낸스 센터', lat: 37.5019, lng: 127.0371 }
-                    ]
-                }
-            ];
-        case 'custom':
-            return [
-                {
-                    id: 'itinerary-custom-default',
-                    name: '나만의 자유 일정',
-                    places: [
-                        { id: 'place-busan-1', name: '부산 해운대해수욕장', lat: 35.1587, lng: 129.1604 },
-                        { id: 'place-busan-2', name: '광안대교', lat: 35.1534, lng: 129.1245 }
-                    ]
-                }
-            ];
-        case 'memo':
-            return [
-                {
-                    id: 'itinerary-memo-default',
-                    name: '즐겨찾기 장소 메모',
-                    places: [
-                        { id: 'place-memo-1', name: '경복궁', lat: 37.5796, lng: 126.9770 },
-                        { id: 'place-memo-2', name: 'N서울타워', lat: 37.5511, lng: 126.9882 }
-                    ]
-                }
-            ];
-        default:
-            return [];
-    }
+    const defaultNames = {
+        travel: '내 여행 일정',
+        business: '내 비즈니스 일정',
+        custom: '내 자유 일정',
+        memo: '장소 메모'
+    };
+    return [
+        {
+            id: `itinerary-${mode}-default`,
+            name: defaultNames[mode] || '기본 일정',
+            mode: mode,
+            places: []
+        }
+    ];
 }
 
 // --- LocalStorage Persistence Service ---
@@ -534,8 +502,8 @@ function switchMode(targetMode) {
     if (activeIt && activeIt.places.length > 0) {
         fitMapToPlaces(activeIt.places);
     } else {
-        // Fallback to Seoul City Hall if no places
-        map.setView([37.5665, 126.9780], 13);
+        // Fallback to Gyeongbokgung if no places
+        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     }
     
     showToast(`[${getModeName(currentMode)}] 모드로 전환되었습니다.`);
@@ -882,7 +850,7 @@ function createItinerary(name, targetMode = currentMode) {
         saveData();
         renderAll();
         clearMap();
-        map.setView([37.5665, 126.9780], 13);
+        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     } else {
         // Fetch existing itineraries for the target mode
         let targetItineraries = PointMapStorage.loadItineraries(targetMode);
@@ -944,7 +912,7 @@ function deleteCurrentItinerary() {
             if (nextIt && nextIt.places.length > 0) {
                 fitMapToPlaces(nextIt.places);
             } else {
-                map.setView([37.5665, 126.9780], 13);
+                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
             }
             showToast(`일정이 삭제되었습니다.`);
         }
@@ -1008,7 +976,7 @@ function deletePlace(placeId) {
             if (it.places.length > 0) {
                 fitMapToPlaces(it.places);
             } else {
-                map.setView([37.5665, 126.9780], 13);
+                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
             }
             showToast(`장소가 삭제되었습니다.`);
         }
@@ -1332,7 +1300,10 @@ async function fetchGoogleRoute(places, travelMode, apiKey) {
         
         const url = `/api/directions?origin=${origin}&destination=${destination}&mode=${googleMode}&key=${apiKey}`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error("API call failed");
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) {
+            throw new Error("Google directions API proxy unavailable");
+        }
         
         const data = await res.json();
         if (data.status !== 'OK') {
@@ -1366,7 +1337,8 @@ async function fetchOSRMRoute(places, travelMode) {
         const url = `https://router.project-osrm.org/route/v1/${profile}/${places[i].lng},${places[i].lat};${places[i+1].lng},${places[i+1].lat}?overview=full&geometries=geojson`;
         
         const res = await fetch(url);
-        if (!res.ok) throw new Error("OSRM API call failed");
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) throw new Error("OSRM API call failed");
         
         const data = await res.json();
         if (data.code !== 'Ok') throw new Error("OSRM returned error: " + data.code);
@@ -1551,6 +1523,10 @@ async function searchPlaces(query) {
     
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&countrycodes=kr`);
+        const contentType = response.headers.get('content-type') || '';
+        if (!response.ok || !contentType.includes('application/json')) {
+            throw new Error("Search API unavailable");
+        }
         const data = await response.json();
         
         if (data && data.length > 0) {
@@ -2364,6 +2340,17 @@ function setupEventListeners() {
         updateRoute();
     });
 
+    // Header logo click listener (Reset view to Gyeongbokgung)
+    const headerLogo = document.getElementById('header-logo');
+    if (headerLogo) {
+        headerLogo.addEventListener('click', () => {
+            if (map) {
+                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+                showToast('경복궁 (기본 위치)로 지도가 이동되었습니다.');
+            }
+        });
+    }
+
     // Share & File Transfer Modal Events
     if (btnShareLink) {
         btnShareLink.addEventListener('click', openShareModal);
@@ -2873,7 +2860,8 @@ async function updateShareUrlDisplay() {
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
                 body: JSON.stringify(currentIt)
             });
-            if (res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('application/json')) {
                 const data = await res.json();
                 if (data.success && data.shareId) {
                     shareParam = `?shareId=${data.shareId}`;
@@ -3086,12 +3074,12 @@ window.addEventListener('DOMContentLoaded', async () => {
                     const firstPlace = defaultIt.places[0];
                     map.setView([firstPlace.lat, firstPlace.lng], 15);
                 } else {
-                    map.setView([37.5665, 126.9780], 13);
+                    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
                 }
             } else if (defaultIt && defaultIt.places.length > 0) {
                 fitMapToPlaces(defaultIt.places);
             } else {
-                map.setView([37.5665, 126.9780], 13);
+                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
             }
             await checkAndLoadSharedData();
         } catch (err) {
@@ -3106,7 +3094,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             if (defaultIt && defaultIt.places.length > 0) {
                 fitMapToPlaces(defaultIt.places);
             } else {
-                map.setView([37.5665, 126.9780], 13);
+                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
             }
             showToast('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
             await checkAndLoadSharedData();
@@ -3120,7 +3108,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (defaultIt && defaultIt.places.length > 0) {
             fitMapToPlaces(defaultIt.places);
         } else {
-            map.setView([37.5665, 126.9780], 13);
+            map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
         }
         await checkAndLoadSharedData();
     }
