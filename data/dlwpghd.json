@@ -1,0 +1,108 @@
+﻿{
+    "password":  "dlwpghd12",
+    "itineraries":  {
+                        "travel":  [
+                                       {
+                                           "id":  "itinerary-1781853374647",
+                                           "name":  "여행 갈끄니까!",
+                                           "mode":  "travel",
+                                           "localUserId":  "device-1780557727406-aniskbomi",
+                                           "userId":  "dlwpghd",
+                                           "createdAt":  "2026-06-19T07:16:14.647Z",
+                                           "updatedAt":  "2026-06-19T07:24:49.671Z",
+                                           "places":  [
+                                                          {
+                                                              "id":  "place-1781853867583-ho4iu",
+                                                              "name":  "지정 장소 (39.9982, 236.2088)",
+                                                              "lat":  39.998163944585805,
+                                                              "lng":  236.20880126953128,
+                                                              "memoDate":  "2026-06-19",
+                                                              "memoTime":  "",
+                                                              "memoText":  "",
+                                                              "transport":  "walking",
+                                                              "localUserId":  "device-1780557727406-aniskbomi",
+                                                              "userId":  "dlwpghd",
+                                                              "createdAt":  "2026-06-19T07:24:27.582Z",
+                                                              "updatedAt":  "2026-06-19T07:24:27.582Z"
+                                                          },
+                                                          {
+                                                              "id":  "place-1781853870781-uga27",
+                                                              "name":  "지정 장소 (39.6120, 236.5343)",
+                                                              "lat":  39.612036199336956,
+                                                              "lng":  236.5342712402344,
+                                                              "memoDate":  "2026-06-19",
+                                                              "memoTime":  "",
+                                                              "memoText":  "",
+                                                              "transport":  "walking",
+                                                              "localUserId":  "device-1780557727406-aniskbomi",
+                                                              "userId":  "dlwpghd",
+                                                              "createdAt":  "2026-06-19T07:24:30.781Z",
+                                                              "updatedAt":  "2026-06-19T07:24:30.781Z"
+                                                          },
+                                                          {
+                                                              "id":  "place-1781853878330-p8iyz",
+                                                              "name":  "지정 장소 (39.0928, 237.0836)",
+                                                              "lat":  39.09276546806873,
+                                                              "lng":  237.0835876464844,
+                                                              "memoDate":  "2026-06-19",
+                                                              "memoTime":  "",
+                                                              "memoText":  "",
+                                                              "transport":  "walking",
+                                                              "localUserId":  "device-1780557727406-aniskbomi",
+                                                              "userId":  "dlwpghd",
+                                                              "createdAt":  "2026-06-19T07:24:38.330Z",
+                                                              "updatedAt":  "2026-06-19T07:24:38.330Z"
+                                                          }
+                                                      ]
+                                       }
+                                   ],
+                        "business":  [
+                                         {
+                                             "id":  "itinerary-1781853372072",
+                                             "name":  "새 [비즈니스] 일정",
+                                             "mode":  "business",
+                                             "localUserId":  "device-1780557727406-aniskbomi",
+                                             "userId":  "dlwpghd",
+                                             "createdAt":  "2026-06-19T07:16:12.072Z",
+                                             "updatedAt":  "2026-06-19T07:16:12.072Z",
+                                             "places":  [
+
+                                                        ]
+                                         }
+                                     ],
+                        "custom":  [
+                                       {
+                                           "id":  "itinerary-1781853367235",
+                                           "name":  "새 [자유일정] 일정",
+                                           "mode":  "custom",
+                                           "localUserId":  "device-1780557727406-aniskbomi",
+                                           "userId":  "dlwpghd",
+                                           "createdAt":  "2026-06-19T07:16:07.235Z",
+                                           "updatedAt":  "2026-06-19T07:16:07.235Z",
+                                           "places":  [
+
+                                                      ]
+                                       }
+                                   ],
+                        "memo":  [
+                                     {
+                                         "id":  "itinerary-memo-default",
+                                         "name":  "즐겨찾기 장소 메모",
+                                         "places":  [
+                                                        {
+                                                            "id":  "place-memo-1",
+                                                            "name":  "경복궁",
+                                                            "lat":  37.5796,
+                                                            "lng":  126.977
+                                                        },
+                                                        {
+                                                            "id":  "place-memo-2",
+                                                            "name":  "N서울타워",
+                                                            "lat":  37.5511,
+                                                            "lng":  126.9882
+                                                        }
+                                                    ]
+                                     }
+                                 ]
+                    }
+}
