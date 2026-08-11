@@ -664,25 +664,66 @@ function saveAllDataToServer() {
 }
 
 async function loginAndLoadDataFromServer(userId, password) {
-    const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8'
-        },
-        body: JSON.stringify({ userId, password })
-    });
+    let result = null;
+    let isServerAvailable = false;
     
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-        throw new Error(result.message || '로그인 실패');
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ userId, password })
+        });
+        
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('application/json')) {
+            result = await response.json();
+            isServerAvailable = true;
+        } else if (contentType.includes('application/json')) {
+            const errJson = await response.json().catch(() => ({}));
+            throw new Error(errJson.message || '로그인 실패');
+        } else {
+            console.warn('Server API not returning JSON (static host environment). Switching to local client mode.');
+        }
+    } catch (e) {
+        if (e.message && e.message.includes('비밀번호')) {
+            throw e;
+        }
+        console.warn('Server connection error, using local storage mode:', e);
     }
     
-    userItinerariesData = {
-        travel: result.itineraries.travel || [],
-        business: result.itineraries.business || [],
-        custom: result.itineraries.custom || [],
-        memo: result.itineraries.memo || []
-    };
+    if (isServerAvailable && result && result.success) {
+        userItinerariesData = {
+            travel: result.itineraries.travel || [],
+            business: result.itineraries.business || [],
+            custom: result.itineraries.custom || [],
+            memo: result.itineraries.memo || []
+        };
+    } else {
+        // Fallback for static host / GitHub Pages / local storage mode
+        let storedUserPass = localStorage.getItem(`point_map_user_pass_${userId}`);
+        if (storedUserPass && storedUserPass !== password) {
+            throw new Error('비밀번호가 일치하지 않습니다.');
+        }
+        if (!storedUserPass) {
+            localStorage.setItem(`point_map_user_pass_${userId}`, password);
+        }
+        
+        ['travel', 'business', 'custom', 'memo'].forEach(mode => {
+            const saved = localStorage.getItem(`point_map_itineraries_${mode}_${userId}`) || localStorage.getItem(`point_map_itineraries_${mode}`);
+            if (saved) {
+                try {
+                    userItinerariesData[mode] = JSON.parse(saved);
+                } catch (err) {
+                    userItinerariesData[mode] = getSeedDataForMode(mode);
+                }
+            } else {
+                userItinerariesData[mode] = getSeedDataForMode(mode);
+            }
+        });
+        result = { success: true, itineraries: userItinerariesData };
+    }
     
     let needsSave = false;
     ['travel', 'business', 'custom', 'memo'].forEach(mode => {
@@ -692,14 +733,14 @@ async function loginAndLoadDataFromServer(userId, password) {
         }
     });
     
-    if (needsSave) {
+    if (needsSave && isServerAvailable) {
         await fetch(`/api/save?userId=${encodeURIComponent(userId)}&password=${encodeURIComponent(password)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json; charset=utf-8'
             },
             body: JSON.stringify(userItinerariesData)
-        });
+        }).catch(err => console.warn('Background server save failed:', err));
     }
     
     return result;
@@ -2960,7 +3001,8 @@ async function checkAndLoadSharedData() {
     if (shareId) {
         try {
             const res = await fetch(`/api/share?id=${encodeURIComponent(shareId)}`);
-            if (res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('application/json')) {
                 sharedItinerary = await res.json();
             }
         } catch (e) {
