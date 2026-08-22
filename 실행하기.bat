@@ -1,5 +1,4 @@
 @echo off
 cd /d "%~dp0"
-echo Starting Point Map Local Server...
-powershell -NoProfile -ExecutionPolicy Bypass -File run-server.ps1
-pause
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""%~dp0run-server.ps1""' -WindowStyle Hidden"
+start http://127.0.0.1:8086

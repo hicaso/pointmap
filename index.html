@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
     <div class="app-container">
@@ -29,41 +29,27 @@
                 <h1 class="logo-title">Point Map</h1>
             </div>
             
-            <div class="itinerary-selector-wrapper">
-                <!-- User Profile Badge & Logout -->
-                <div id="user-profile-badge" class="user-profile-badge" style="display: none;">
-                    <i class="fa-solid fa-circle-user user-avatar-icon"></i>
-                    <span id="display-user-id" class="user-display-name"></span>님
-                    <button id="btn-logout" class="btn-logout-header" title="로그아웃">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+            <!-- Search Box in Header Center -->
+            <div class="search-wrapper header-search-wrapper">
+                <div class="search-input-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="장소 검색 (예: 제주공항, 성산일출봉)..." aria-label="장소 검색">
+                    <button id="btn-clear-search" class="btn-clear-search" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-                
-                <select id="itinerary-select" class="itinerary-select" aria-label="일정 선택">
-                    <!-- Dynamic Options Filled by JS -->
-                </select>
-                <button id="btn-new-itinerary" class="btn-icon-text" title="새 일정 추가">
-                    <i class="fa-solid fa-plus"></i> <span>새 일정</span>
-                </button>
-                <button id="btn-rename-itinerary" class="btn-icon-only" title="일정 이름 변경">
-                    <i class="fa-solid fa-pen"></i>
-                </button>
-                <button id="btn-delete-itinerary" class="btn-icon-only btn-danger" title="일정 삭제">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-                <div class="dropdown-wrapper">
-                    <button id="btn-send-itinerary" class="btn-icon-only btn-share" title="일정을 다른 모드로 보내기">
-                        <i class="fa-solid fa-share-nodes"></i>
-                    </button>
-                    <ul id="send-itinerary-menu" class="dropdown-menu">
-                        <!-- Dynamic options in JS -->
-                    </ul>
-                </div>
-                <button id="btn-share-link" class="btn-icon-only btn-share-link" title="웹사이트 공유 및 파일 관리">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                </button>
-                <button id="btn-api-settings" class="btn-icon-only btn-api-settings" title="Google Maps API 설정">
-                    <i class="fa-solid fa-gear"></i>
+                <!-- Search Autocomplete Suggestions -->
+                <ul id="search-results-list" class="search-results-list" style="display: none;">
+                    <!-- JS Dynamically populates search query hits -->
+                </ul>
+            </div>
+
+            <!-- User Profile Badge & Logout -->
+            <div id="user-profile-badge" class="user-profile-badge" style="display: none;">
+                <i class="fa-solid fa-circle-user user-avatar-icon"></i>
+                <span id="display-user-id" class="user-display-name"></span>님
+                <button id="btn-logout" class="btn-logout-header" title="로그아웃">
+                    <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
         </header>
@@ -96,20 +82,35 @@
                         <i class="fa-solid fa-note-sticky"></i> <span>자유메모</span>
                     </button>
                 </div>
-                
-                <!-- Search Box inside Panel -->
-                <div class="search-wrapper">
-                    <div class="search-input-container">
-                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input type="text" id="search-input" placeholder="장소 검색 (예: 제주공항, 성산일출봉)..." aria-label="장소 검색">
-                        <button id="btn-clear-search" class="btn-clear-search" style="display: none;">
-                            <i class="fa-solid fa-xmark"></i>
+
+                <!-- Itinerary Dropdown & Tools (Moved under Mode Tabs) -->
+                <div class="itinerary-selector-wrapper panel-itinerary-wrapper">
+                    <select id="itinerary-select" class="itinerary-select" aria-label="일정 선택">
+                        <!-- Dynamic Options Filled by JS -->
+                    </select>
+                    <button id="btn-new-itinerary" class="btn-icon-text" title="새 일정 추가">
+                        <i class="fa-solid fa-plus"></i> <span>새 일정</span>
+                    </button>
+                    <button id="btn-rename-itinerary" class="btn-icon-only" title="일정 이름 변경">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button id="btn-delete-itinerary" class="btn-icon-only btn-danger" title="일정 삭제">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <div class="dropdown-wrapper">
+                        <button id="btn-send-itinerary" class="btn-icon-only btn-share" title="일정을 다른 모드로 보내기">
+                            <i class="fa-solid fa-share-nodes"></i>
                         </button>
+                        <ul id="send-itinerary-menu" class="dropdown-menu">
+                            <!-- Dynamic options in JS -->
+                        </ul>
                     </div>
-                    <!-- Search Autocomplete Suggestions -->
-                    <ul id="search-results-list" class="search-results-list" style="display: none;">
-                        <!-- JS Dynamically populates search query hits -->
-                    </ul>
+                    <button id="btn-share-link" class="btn-icon-only btn-share-link" title="웹사이트 공유 및 파일 관리">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                    <button id="btn-api-settings" class="btn-icon-only btn-api-settings" title="Google Maps API 설정">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
                 </div>
                 
                 <!-- Route Mode Selector (Walking, Transit, Driving) -->
@@ -136,7 +137,7 @@
                     <div id="empty-state" class="empty-state">
                         <i class="fa-solid fa-route empty-icon"></i>
                         <p class="empty-text">저장된 장소가 없습니다.</p>
-                        <p class="empty-subtext">위 검색창에서 장소를 검색하거나,<br>지도 위를 마우스로 더블 클릭하여 추가하세요.</p>
+                        <p class="empty-subtext">상단 검색창에서 장소를 검색하거나,<br>지도 위를 마우스로 더블 클릭하여 추가하세요.</p>
                     </div>
                     <ul id="place-cards-list" class="place-cards-list">
                         <!-- Place cards dynamically appended here -->
@@ -410,7 +411,7 @@
                     <label for="login-username-input" class="login-label">사용자 아이디 (ID)</label>
                     <div class="login-input-wrapper">
                         <i class="fa-solid fa-user login-field-icon"></i>
-                        <input type="text" id="login-username-input" class="login-input-field" placeholder="사용할 아이디를 입력하세요" maxlength="20" autofocus autocomplete="off">
+                        <input type="text" id="login-username-input" class="login-input-field" placeholder="영문 아이디 입력 (예: user1)" maxlength="20" autofocus autocomplete="off">
                     </div>
                 </div>
                 <div class="login-input-group">
@@ -435,6 +436,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <!-- Custom Application Logic -->
-    <script src="app.js"></script>
+    <script src="app.js?v=3.0"></script>
 </body>
 </html>

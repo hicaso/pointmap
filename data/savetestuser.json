@@ -1,0 +1,87 @@
+﻿{
+    "password":  "pass1234",
+    "itineraries":  {
+                        "travel":  [
+                                       {
+                                           "id":  "itinerary-travel-default",
+                                           "name":  "내 여행 일정",
+                                           "mode":  "travel",
+                                           "places":  [
+                                                          {
+                                                              "id":  "place-1787213373279-iasde",
+                                                              "name":  "제주특별자치도",
+                                                              "lat":  33.4887737,
+                                                              "lng":  126.4987083,
+                                                              "memoDate":  "2026-08-20",
+                                                              "memoTime":  "",
+                                                              "memoText":  "test memo",
+                                                              "transport":  "walking",
+                                                              "localUserId":  "device-1780557727406-aniskbomi",
+                                                              "userId":  "savetestuser",
+                                                              "createdAt":  "2026-08-20T08:09:33.279Z",
+                                                              "updatedAt":  "2026-08-20T08:09:33.279Z"
+                                                          }
+                                                      ],
+                                           "localUserId":  "device-1780557727406-aniskbomi",
+                                           "userId":  "savetestuser",
+                                           "createdAt":  "2026-08-20T08:08:19.947Z",
+                                           "updatedAt":  "2026-08-20T08:10:08.495Z"
+                                       },
+                                       {
+                                           "id":  "itinerary-1787213439513",
+                                           "name":  "new itinerary",
+                                           "mode":  "travel",
+                                           "localUserId":  "device-1780557727406-aniskbomi",
+                                           "userId":  "savetestuser",
+                                           "createdAt":  "2026-08-20T08:10:39.513Z",
+                                           "updatedAt":  "2026-08-20T08:12:12.587Z",
+                                           "places":  [
+                                                          {
+                                                              "id":  "place-1787213498030-vnpuf",
+                                                              "name":  "제주특별자치도",
+                                                              "lat":  33.4887737,
+                                                              "lng":  126.4987083,
+                                                              "memoDate":  "2026-08-20",
+                                                              "memoTime":  "",
+                                                              "memoText":  "new itinerary memo",
+                                                              "transport":  "walking",
+                                                              "localUserId":  "device-1780557727406-aniskbomi",
+                                                              "userId":  "savetestuser",
+                                                              "createdAt":  "2026-08-20T08:11:38.030Z",
+                                                              "updatedAt":  "2026-08-20T08:11:38.030Z"
+                                                          }
+                                                      ]
+                                       }
+                                   ],
+                        "business":  [
+                                         {
+                                             "id":  "itinerary-business-default",
+                                             "name":  "내 비즈니스 일정",
+                                             "mode":  "business",
+                                             "places":  [
+
+                                                        ]
+                                         }
+                                     ],
+                        "custom":  [
+                                       {
+                                           "id":  "itinerary-custom-default",
+                                           "name":  "내 자유 일정",
+                                           "mode":  "custom",
+                                           "places":  [
+
+                                                      ]
+                                       }
+                                   ],
+                        "memo":  [
+                                     {
+                                         "id":  "itinerary-memo-default",
+                                         "name":  "장소 메모",
+                                         "mode":  "memo",
+                                         "places":  [
+
+                                                    ]
+                                     }
+                                 ]
+                    }
+}

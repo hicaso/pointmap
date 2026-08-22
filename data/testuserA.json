@@ -4,118 +4,25 @@
                         "travel":  [
                                        {
                                            "id":  "itinerary-travel-default",
-                                           "name":  "제주도 2박 3일 여행",
+                                           "name":  "내 여행 일정",
+                                           "mode":  "travel",
                                            "places":  [
-                                                          {
-                                                              "id":  "place-jeju-1",
-                                                              "name":  "제주국제공항",
-                                                              "lat":  33.5113,
-                                                              "lng":  126.493,
-                                                              "localUserId":  "device-1780557727406-aniskbomi",
-                                                              "userId":  "testuserA",
-                                                              "createdAt":  "2026-06-19T07:00:01.185Z",
-                                                              "updatedAt":  "2026-06-19T07:00:01.185Z"
-                                                          },
-                                                          {
-                                                              "id":  "place-jeju-2",
-                                                              "name":  "함덕해수욕장",
-                                                              "lat":  33.5434,
-                                                              "lng":  126.6692,
-                                                              "localUserId":  "device-1780557727406-aniskbomi",
-                                                              "userId":  "testuserA",
-                                                              "createdAt":  "2026-06-19T07:00:01.185Z",
-                                                              "updatedAt":  "2026-06-19T07:00:01.185Z"
-                                                          },
-                                                          {
-                                                              "id":  "place-jeju-3",
-                                                              "name":  "성산일출봉",
-                                                              "lat":  33.4585,
-                                                              "lng":  126.9425,
-                                                              "localUserId":  "device-1780557727406-aniskbomi",
-                                                              "userId":  "testuserA",
-                                                              "createdAt":  "2026-06-19T07:00:01.185Z",
-                                                              "updatedAt":  "2026-06-19T07:00:01.185Z"
-                                                          }
+
                                                       ],
                                            "localUserId":  "device-1780557727406-aniskbomi",
                                            "userId":  "testuserA",
-                                           "createdAt":  "2026-06-19T07:00:01.185Z",
-                                           "updatedAt":  "2026-06-19T07:00:01.185Z",
-                                           "mode":  "travel"
+                                           "createdAt":  "2026-08-20T08:03:58.631Z",
+                                           "updatedAt":  "2026-08-20T08:03:58.632Z"
                                        }
                                    ],
                         "business":  [
-                                         {
-                                             "id":  "itinerary-business-default",
-                                             "name":  "서울 비즈니스 출장",
-                                             "places":  [
-                                                            {
-                                                                "id":  "place-seoul-1",
-                                                                "name":  "코엑스 (COEX)",
-                                                                "lat":  37.5118,
-                                                                "lng":  127.0592,
-                                                                "localUserId":  "device-1780557727406-aniskbomi",
-                                                                "userId":  "testuserA",
-                                                                "createdAt":  "2026-06-19T06:59:46.342Z",
-                                                                "updatedAt":  "2026-06-19T06:59:46.342Z"
-                                                            },
-                                                            {
-                                                                "id":  "place-seoul-2",
-                                                                "name":  "강남 파이낸스 센터",
-                                                                "lat":  37.5019,
-                                                                "lng":  127.0371,
-                                                                "localUserId":  "device-1780557727406-aniskbomi",
-                                                                "userId":  "testuserA",
-                                                                "createdAt":  "2026-06-19T06:59:46.342Z",
-                                                                "updatedAt":  "2026-06-19T06:59:46.342Z"
-                                                            }
-                                                        ],
-                                             "localUserId":  "device-1780557727406-aniskbomi",
-                                             "userId":  "testuserA",
-                                             "createdAt":  "2026-06-19T06:59:46.342Z",
-                                             "updatedAt":  "2026-06-19T06:59:46.342Z",
-                                             "mode":  "business"
-                                         }
+
                                      ],
                         "custom":  [
-                                       {
-                                           "id":  "itinerary-custom-default",
-                                           "name":  "나만의 자유 일정",
-                                           "places":  [
-                                                          {
-                                                              "id":  "place-busan-1",
-                                                              "name":  "부산 해운대해수욕장",
-                                                              "lat":  35.1587,
-                                                              "lng":  129.1604
-                                                          },
-                                                          {
-                                                              "id":  "place-busan-2",
-                                                              "name":  "광안대교",
-                                                              "lat":  35.1534,
-                                                              "lng":  129.1245
-                                                          }
-                                                      ]
-                                       }
+
                                    ],
                         "memo":  [
-                                     {
-                                         "id":  "itinerary-memo-default",
-                                         "name":  "즐겨찾기 장소 메모",
-                                         "places":  [
-                                                        {
-                                                            "id":  "place-memo-1",
-                                                            "name":  "경복궁",
-                                                            "lat":  37.5796,
-                                                            "lng":  126.977
-                                                        },
-                                                        {
-                                                            "id":  "place-memo-2",
-                                                            "name":  "N서울타워",
-                                                            "lat":  37.5511,
-                                                            "lng":  126.9882
-                                                        }
-                                                    ]
-                                     }
+
                                  ]
                     }
 }

@@ -57,6 +57,25 @@ while ($listener.IsListening) {
             continue
         }
         
+        if ($urlPath -eq "/api/check-user") {
+            $response.ContentType = "application/json; charset=utf-8"
+            $userId = $request.QueryString["userId"]
+            if ([string]::IsNullOrEmpty($userId)) {
+                $response.StatusCode = 400
+                $responseBody = @{ success = $false; exists = $false; message = "userId가 누락되었습니다." } | ConvertTo-Json
+            } else {
+                $safeUserId = [regex]::Replace($userId, "[^a-zA-Z0-9_\-]", "")
+                $userFilePath = Join-Path $ScriptDir "data\$safeUserId.json"
+                $exists = Test-Path $userFilePath -PathType Leaf
+                $responseBody = @{ success = $true; exists = $exists } | ConvertTo-Json
+            }
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($responseBody)
+            $response.ContentLength64 = $bytes.Length
+            $response.OutputStream.Write($bytes, 0, $bytes.Length)
+            $response.Close()
+            continue
+        }
+
         if ($urlPath -eq "/api/login") {
             $response.ContentType = "application/json; charset=utf-8"
             if ($request.HasEntityBody) {
@@ -312,7 +331,10 @@ while ($listener.IsListening) {
         if (Test-Path $filePath -PathType Leaf) {
             $bytes = [System.IO.File]::ReadAllBytes($filePath)
             
-            # Content Type Mapping
+            # Content Type Mapping & No-Cache Headers
+            $response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+            $response.Headers.Add("Pragma", "no-cache")
+            $response.Headers.Add("Expires", "0")
             if ($filePath.EndsWith(".html")) {
                 $response.ContentType = "text/html; charset=utf-8"
             } elseif ($filePath.EndsWith(".js")) {

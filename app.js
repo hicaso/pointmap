@@ -169,10 +169,12 @@ function formatDateWithDay(dateStr) {
 // Custom Confirm Helper
 function showConfirm(title, message, onConfirm) {
     confirmTitle.innerHTML = title;
-    confirmMessage.textContent = message;
+    confirmMessage.innerHTML = message;
     confirmCallback = onConfirm;
     confirmModal.style.display = 'flex';
-    updateConfirmModalTheme();
+    if (typeof updateConfirmModalTheme === 'function') {
+        updateConfirmModalTheme();
+    }
 }
 
 function closeConfirm() {
@@ -614,6 +616,13 @@ function saveAllDataToServer() {
     const password = PointMapStorage.getUserPassword() || '';
     if (!userId) return;
     
+    // Always persist to local storage under isolated user key
+    ['travel', 'business', 'custom', 'memo'].forEach(mode => {
+        if (userItinerariesData[mode]) {
+            localStorage.setItem(`point_map_itineraries_${mode}_${userId}`, JSON.stringify(userItinerariesData[mode]));
+        }
+    });
+
     fetch(`/api/save?userId=${encodeURIComponent(userId)}&password=${encodeURIComponent(password)}`, {
         method: 'POST',
         headers: {
@@ -627,8 +636,24 @@ function saveAllDataToServer() {
         }
     })
     .catch(err => {
-        console.error('Error saving data:', err);
+        console.warn('Background server save fallback to local mode:', err);
     });
+}
+
+async function checkUserExists(userId) {
+    try {
+        const res = await fetch(`/api/check-user?userId=${encodeURIComponent(userId)}`);
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+            const data = await res.json();
+            return data.exists;
+        }
+    } catch (e) {
+        console.warn('Check user server API failed, checking local storage:', e);
+    }
+    // Fallback for static host / local client mode
+    const storedUserPass = localStorage.getItem(`point_map_user_pass_${userId}`);
+    return !!storedUserPass;
 }
 
 async function loginAndLoadDataFromServer(userId, password) {
@@ -645,17 +670,20 @@ async function loginAndLoadDataFromServer(userId, password) {
         });
         
         const contentType = response.headers.get('content-type') || '';
-        if (response.ok && contentType.includes('application/json')) {
+        if (contentType.includes('application/json')) {
             result = await response.json();
-            isServerAvailable = true;
-        } else if (contentType.includes('application/json')) {
-            const errJson = await response.json().catch(() => ({}));
-            throw new Error(errJson.message || '로그인 실패');
+            if (response.ok) {
+                isServerAvailable = true;
+            } else {
+                throw new Error(result.message || '비밀번호가 일치하지 않습니다.');
+            }
+        } else if (!response.ok) {
+            throw new Error('로그인 실패');
         } else {
             console.warn('Server API not returning JSON (static host environment). Switching to local client mode.');
         }
     } catch (e) {
-        if (e.message && e.message.includes('비밀번호')) {
+        if (e.message && (e.message.includes('비밀번호') || e.message.includes('일치하지 않습니다'))) {
             throw e;
         }
         console.warn('Server connection error, using local storage mode:', e);
@@ -679,7 +707,7 @@ async function loginAndLoadDataFromServer(userId, password) {
         }
         
         ['travel', 'business', 'custom', 'memo'].forEach(mode => {
-            const saved = localStorage.getItem(`point_map_itineraries_${mode}_${userId}`) || localStorage.getItem(`point_map_itineraries_${mode}`);
+            const saved = localStorage.getItem(`point_map_itineraries_${mode}_${userId}`);
             if (saved) {
                 try {
                     userItinerariesData[mode] = JSON.parse(saved);
@@ -720,7 +748,10 @@ async function handleLogin(userId, password) {
         errorElement.style.display = 'none';
     }
     
-    if (!userId || userId.trim() === '' || !password || password.trim() === '') {
+    const cleanId = (userId || '').replace(/\s+/g, '');
+    const cleanPassword = (password || '').replace(/\s+/g, '');
+    
+    if (!cleanId || !cleanPassword) {
         if (errorElement) {
             errorElement.textContent = '아이디와 비밀번호를 모두 입력해 주세요.';
             errorElement.style.display = 'block';
@@ -728,21 +759,39 @@ async function handleLogin(userId, password) {
         return;
     }
     
-    const sanitizedId = userId.replace(/[^a-zA-Z0-9_\-]/g, '');
-    if (sanitizedId !== userId) {
+    // Allow only English, Numbers, _, -
+    const sanitizedId = cleanId.replace(/[^a-zA-Z0-9_\-]/g, '');
+    if (sanitizedId !== cleanId) {
         if (errorElement) {
-            errorElement.textContent = '아이디는 영문, 숫자, _, - 만 사용 가능합니다.';
+            errorElement.textContent = '아이디는 영문, 숫자, _, - 만 사용 가능합니다. (한글/공백/특수문자 불가)';
             errorElement.style.display = 'block';
         }
         return;
     }
-    
+
+    // Check if user exists first
+    const exists = await checkUserExists(sanitizedId);
+    if (!exists) {
+        showConfirm(
+            `<i class="fa-solid fa-user-plus" style="color: var(--primary-blue, #2196F3);"></i> 신규 계정 개설 안내`,
+            `등록되지 않은 아이디(<strong>${sanitizedId}</strong>)입니다.<br>입력하신 정보로 신규 계정을 생성하시겠습니까?`,
+            async () => {
+                await executeLoginProcess(sanitizedId, cleanPassword, errorElement);
+            }
+        );
+        return;
+    }
+
+    await executeLoginProcess(sanitizedId, cleanPassword, errorElement);
+}
+
+async function executeLoginProcess(sanitizedId, cleanPassword, errorElement) {
     try {
         showToast('로그인 중...');
-        await loginAndLoadDataFromServer(sanitizedId, password);
+        await loginAndLoadDataFromServer(sanitizedId, cleanPassword);
         
         PointMapStorage.setUserId(sanitizedId);
-        PointMapStorage.setUserPassword(password);
+        PointMapStorage.setUserPassword(cleanPassword);
         
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('display-user-id').textContent = sanitizedId;
@@ -754,6 +803,8 @@ async function handleLogin(userId, password) {
         const defaultIt = getCurrentItinerary();
         if (defaultIt && defaultIt.places.length > 0) {
             fitMapToPlaces(defaultIt.places);
+        } else {
+            map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
         }
         
         showToast(`${sanitizedId}님, 환영합니다!`);
@@ -2136,42 +2187,56 @@ function handleModalSubmit() {
 
 // --- Event Listeners Setup ---
 function setupEventListeners() {
-    // Header Logo Click (Refresh page and focus on the first place of current itinerary)
-    const headerLogo = document.querySelector('.header-logo');
-    if (headerLogo) {
-        headerLogo.addEventListener('click', () => {
-            sessionStorage.setItem('focus_first_place_on_load', 'true');
-            window.location.reload();
-        });
-    }
+    try {
+        // Login Overlay Events
+        const btnLoginSubmit = document.getElementById('btn-login-submit');
+        if (btnLoginSubmit) {
+            btnLoginSubmit.addEventListener('click', (e) => {
+                e.preventDefault();
+                const usernameInput = document.getElementById('login-username-input');
+                const passwordInput = document.getElementById('login-password-input');
+                handleLogin(usernameInput.value, passwordInput.value);
+            });
+        }
 
-    // Login Overlay Events
-    const btnLoginSubmit = document.getElementById('btn-login-submit');
-    if (btnLoginSubmit) {
-        btnLoginSubmit.addEventListener('click', () => {
-            const usernameInput = document.getElementById('login-username-input');
-            const passwordInput = document.getElementById('login-password-input');
-            handleLogin(usernameInput.value, passwordInput.value);
-        });
-    }
+        const loginUsernameInput = document.getElementById('login-username-input');
+        const loginPasswordInput = document.getElementById('login-password-input');
+        
+        if (loginUsernameInput) {
+            loginUsernameInput.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.key === 'Enter') {
+                    if (loginPasswordInput) loginPasswordInput.focus();
+                }
+            });
+            loginUsernameInput.addEventListener('input', (e) => {
+                if (e.target.value.includes(' ')) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                }
+            });
+        }
 
-    const loginUsernameInput = document.getElementById('login-username-input');
-    const loginPasswordInput = document.getElementById('login-password-input');
-    
-    if (loginUsernameInput) {
-        loginUsernameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (loginPasswordInput) loginPasswordInput.focus();
-            }
-        });
-    }
-
-    if (loginPasswordInput) {
-        loginPasswordInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                handleLogin(loginUsernameInput.value, loginPasswordInput.value);
-            }
-        });
+        if (loginPasswordInput) {
+            loginPasswordInput.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.key === 'Enter') {
+                    handleLogin(loginUsernameInput.value, loginPasswordInput.value);
+                }
+            });
+            loginPasswordInput.addEventListener('input', (e) => {
+                if (e.target.value.includes(' ')) {
+                    e.target.value = e.target.value.replace(/\s+/g, '');
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Error binding login listeners:', err);
     }
 
     // Logout Header Button
@@ -3055,61 +3120,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     const savedUserId = PointMapStorage.getUserId();
     const savedPassword = PointMapStorage.getUserPassword();
     if (savedUserId && savedPassword) {
-        try {
-            showToast('자동 로그인 중...');
-            await loginAndLoadDataFromServer(savedUserId, savedPassword);
-            
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('display-user-id').textContent = savedUserId;
-            document.getElementById('user-profile-badge').style.display = 'inline-flex';
-            
-            loadData();
-            renderAll();
-            
-            const defaultIt = getCurrentItinerary();
-            const focusFirst = sessionStorage.getItem('focus_first_place_on_load');
-            if (focusFirst === 'true') {
-                sessionStorage.removeItem('focus_first_place_on_load');
-                if (defaultIt && defaultIt.places.length > 0) {
-                    const firstPlace = defaultIt.places[0];
-                    map.setView([firstPlace.lat, firstPlace.lng], 15);
-                } else {
-                    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-                }
-            } else if (defaultIt && defaultIt.places.length > 0) {
-                fitMapToPlaces(defaultIt.places);
-            } else {
-                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-            }
-            await checkAndLoadSharedData();
-        } catch (err) {
-            console.error('Auto login failed:', err);
-            PointMapStorage.setUserId('');
-            PointMapStorage.setUserPassword('');
-            document.getElementById('login-overlay').style.display = 'flex';
-            document.getElementById('user-profile-badge').style.display = 'none';
-            loadData();
-            renderAll();
-            const defaultIt = getCurrentItinerary();
-            if (defaultIt && defaultIt.places.length > 0) {
-                fitMapToPlaces(defaultIt.places);
-            } else {
-                map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-            }
-            showToast('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
-            await checkAndLoadSharedData();
-        }
-    } else {
-        document.getElementById('login-overlay').style.display = 'flex';
-        document.getElementById('user-profile-badge').style.display = 'none';
-        loadData();
-        renderAll();
-        const defaultIt = getCurrentItinerary();
-        if (defaultIt && defaultIt.places.length > 0) {
-            fitMapToPlaces(defaultIt.places);
-        } else {
-            map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-        }
-        await checkAndLoadSharedData();
+        document.getElementById('login-username-input').value = savedUserId;
+        document.getElementById('login-password-input').value = savedPassword;
     }
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('user-profile-badge').style.display = 'none';
+    loadData();
+    renderAll();
+    const defaultIt = getCurrentItinerary();
+    if (defaultIt && defaultIt.places.length > 0) {
+        fitMapToPlaces(defaultIt.places);
+    } else {
+        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    }
+    await checkAndLoadSharedData();
 });
