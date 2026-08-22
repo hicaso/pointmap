@@ -415,6 +415,18 @@ const PointMapStorage = {
 
     loadItineraries(mode) {
         let list = userItinerariesData[mode] || [];
+        const userId = this.getUserId();
+        if ((!list || list.length === 0) && userId) {
+            const saved = localStorage.getItem(`point_map_itineraries_${mode}_${userId}`);
+            if (saved) {
+                try {
+                    list = JSON.parse(saved);
+                    userItinerariesData[mode] = list;
+                } catch (e) {
+                    console.warn('Failed to parse local storage itineraries:', e);
+                }
+            }
+        }
         if (!list || list.length === 0) {
             list = getSeedDataForMode(mode);
             userItinerariesData[mode] = list;
